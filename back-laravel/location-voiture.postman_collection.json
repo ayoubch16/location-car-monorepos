@@ -1,0 +1,503 @@
+{
+  "info": {
+    "name": "Location Voiture API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url",       "value": "http://localhost:8000" },
+    { "key": "access_token",   "value": "" },
+    { "key": "refresh_token",  "value": "" },
+    { "key": "voiture_id",     "value": "1" },
+    { "key": "location_id",    "value": "1" },
+    { "key": "paiement_id",    "value": "1" }
+  ],
+  "item": [
+
+    {
+      "name": "Auth",
+      "item": [
+
+        {
+          "name": "Register",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "var r = pm.response.json();",
+            "if (r.access_token)  pm.collectionVariables.set('access_token',  r.access_token);",
+            "if (r.refresh_token) pm.collectionVariables.set('refresh_token', r.refresh_token);"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Benali\",\n  \"prenom\": \"Youssef\",\n  \"email\": \"youssef.benali@example.com\",\n  \"password\": \"Password@123\",\n  \"password_confirmation\": \"Password@123\",\n  \"telephone\": \"0612345678\",\n  \"adresse\": \"12 Rue Hassan II, Rabat\",\n  \"num_permis\": \"B-123456\",\n  \"date_naissance\": \"1995-06-15\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/api/auth/register", "host": ["{{base_url}}"], "path": ["api","auth","register"] }
+          }
+        },
+
+        {
+          "name": "Login (client)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "var r = pm.response.json();",
+            "if (r.access_token)  pm.collectionVariables.set('access_token',  r.access_token);",
+            "if (r.refresh_token) pm.collectionVariables.set('refresh_token', r.refresh_token);"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"youssef.benali@example.com\",\n  \"password\": \"Password@123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api","auth","login"] }
+          }
+        },
+
+        {
+          "name": "Login (admin)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "var r = pm.response.json();",
+            "if (r.access_token)  pm.collectionVariables.set('access_token',  r.access_token);",
+            "if (r.refresh_token) pm.collectionVariables.set('refresh_token', r.refresh_token);"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@location-voiture.com\",\n  \"password\": \"Admin@1234\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api","auth","login"] }
+          }
+        },
+
+        {
+          "name": "Refresh Token",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "var r = pm.response.json();",
+            "if (r.access_token)  pm.collectionVariables.set('access_token',  r.access_token);",
+            "if (r.refresh_token) pm.collectionVariables.set('refresh_token', r.refresh_token);"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/api/auth/refresh", "host": ["{{base_url}}"], "path": ["api","auth","refresh"] }
+          }
+        },
+
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/auth/me", "host": ["{{base_url}}"], "path": ["api","auth","me"] }
+          }
+        },
+
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/auth/logout", "host": ["{{base_url}}"], "path": ["api","auth","logout"] }
+          }
+        },
+
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"youssef.benali@example.com\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/api/auth/forgot-password", "host": ["{{base_url}}"], "path": ["api","auth","forgot-password"] }
+          }
+        },
+
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"PASTE_RESET_TOKEN_HERE\",\n  \"email\": \"youssef.benali@example.com\",\n  \"password\": \"NewPassword@456\",\n  \"password_confirmation\": \"NewPassword@456\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/api/auth/reset-password", "host": ["{{base_url}}"], "path": ["api","auth","reset-password"] }
+          }
+        }
+
+      ]
+    },
+
+    {
+      "name": "Voitures",
+      "item": [
+
+        {
+          "name": "Liste voitures (public)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/voitures?disponible=true&marque=Toyota&prix_max=500",
+              "host": ["{{base_url}}"], "path": ["api","voitures"],
+              "query": [
+                { "key": "disponible", "value": "true" },
+                { "key": "marque",     "value": "Toyota", "disabled": true },
+                { "key": "prix_max",   "value": "500",    "disabled": true }
+              ]
+            }
+          }
+        },
+
+        {
+          "name": "Détail voiture (public)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/voitures/{{voiture_id}}", "host": ["{{base_url}}"], "path": ["api","voitures","{{voiture_id}}"] }
+          }
+        },
+
+        {
+          "name": "Créer voiture (admin)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "var r = pm.response.json();",
+            "if (r.voiture && r.voiture.id) pm.collectionVariables.set('voiture_id', r.voiture.id);"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"marque\": \"Toyota\",\n  \"modele\": \"Corolla\",\n  \"annee\": 2022,\n  \"immatriculation\": \"12345-A-1\",\n  \"couleur\": \"Blanc\",\n  \"prix_par_jour\": 350.00,\n  \"disponible\": true,\n  \"kilometrage\": 15000\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/api/voitures", "host": ["{{base_url}}"], "path": ["api","voitures"] }
+          }
+        },
+
+        {
+          "name": "Modifier voiture (admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"prix_par_jour\": 380.00,\n  \"disponible\": true,\n  \"kilometrage\": 16500\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/api/voitures/{{voiture_id}}", "host": ["{{base_url}}"], "path": ["api","voitures","{{voiture_id}}"] }
+          }
+        },
+
+        {
+          "name": "Supprimer voiture (admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/voitures/{{voiture_id}}", "host": ["{{base_url}}"], "path": ["api","voitures","{{voiture_id}}"] }
+          }
+        }
+
+      ]
+    },
+
+    {
+      "name": "Locations",
+      "item": [
+
+        {
+          "name": "Mes locations",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/locations", "host": ["{{base_url}}"], "path": ["api","locations"] }
+          }
+        },
+
+        {
+          "name": "Détail location",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/locations/{{location_id}}", "host": ["{{base_url}}"], "path": ["api","locations","{{location_id}}"] }
+          }
+        },
+
+        {
+          "name": "Créer location",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "var r = pm.response.json();",
+            "if (r.location && r.location.id)           pm.collectionVariables.set('location_id', r.location.id);",
+            "if (r.paiement && r.paiement.id)           pm.collectionVariables.set('paiement_id', r.paiement.id);",
+            "if (r.location && r.location.paiement && r.location.paiement.id) pm.collectionVariables.set('paiement_id', r.location.paiement.id);"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"voiture_id\": {{voiture_id}},\n  \"date_debut\": \"2026-07-01\",\n  \"date_fin\": \"2026-07-05\",\n  \"lieu_prise_en_charge\": \"Aéroport Mohammed V, Casablanca\",\n  \"lieu_retour\": \"Aéroport Mohammed V, Casablanca\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/api/locations", "host": ["{{base_url}}"], "path": ["api","locations"] }
+          }
+        },
+
+        {
+          "name": "Annuler location",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/locations/{{location_id}}/cancel", "host": ["{{base_url}}"], "path": ["api","locations","{{location_id}}","cancel"] }
+          }
+        },
+
+        {
+          "name": "Modifier location (admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"statut\": \"terminee\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/api/locations/{{location_id}}", "host": ["{{base_url}}"], "path": ["api","locations","{{location_id}}"] }
+          }
+        },
+
+        {
+          "name": "Supprimer location (admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/locations/{{location_id}}", "host": ["{{base_url}}"], "path": ["api","locations","{{location_id}}"] }
+          }
+        }
+
+      ]
+    },
+
+    {
+      "name": "Paiements",
+      "item": [
+
+        {
+          "name": "Mes paiements",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/paiements", "host": ["{{base_url}}"], "path": ["api","paiements"] }
+          }
+        },
+
+        {
+          "name": "Détail paiement",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/paiements/{{paiement_id}}", "host": ["{{base_url}}"], "path": ["api","paiements","{{paiement_id}}"] }
+          }
+        },
+
+        {
+          "name": "Payer",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"methode\": \"carte_bancaire\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/api/paiements/{{paiement_id}}/pay", "host": ["{{base_url}}"], "path": ["api","paiements","{{paiement_id}}","pay"] }
+          }
+        },
+
+        {
+          "name": "Télécharger devis PDF",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept",        "value": "application/pdf" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/paiements/{{paiement_id}}/devis", "host": ["{{base_url}}"], "path": ["api","paiements","{{paiement_id}}","devis"] }
+          }
+        },
+
+        {
+          "name": "Rembourser (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/paiements/{{paiement_id}}/refund", "host": ["{{base_url}}"], "path": ["api","paiements","{{paiement_id}}","refund"] }
+          }
+        }
+
+      ]
+    },
+
+    {
+      "name": "Utilisateurs (admin)",
+      "item": [
+
+        {
+          "name": "Liste users",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/users", "host": ["{{base_url}}"], "path": ["api","users"] }
+          }
+        },
+
+        {
+          "name": "Détail user",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/users/1", "host": ["{{base_url}}"], "path": ["api","users","1"] }
+          }
+        },
+
+        {
+          "name": "Créer user (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"El Idrissi\",\n  \"prenom\": \"Sara\",\n  \"email\": \"sara.elidrissi@example.com\",\n  \"password\": \"Password@123\",\n  \"password_confirmation\": \"Password@123\",\n  \"telephone\": \"0661234567\",\n  \"adresse\": \"5 Avenue Al Massira, Marrakech\",\n  \"num_permis\": \"C-789012\",\n  \"date_naissance\": \"1998-03-22\",\n  \"role\": \"client\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/api/users", "host": ["{{base_url}}"], "path": ["api","users"] }
+          }
+        },
+
+        {
+          "name": "Modifier user (admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"telephone\": \"0699887766\",\n  \"adresse\": \"8 Rue Ibn Battouta, Fès\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/api/users/1", "host": ["{{base_url}}"], "path": ["api","users","1"] }
+          }
+        },
+
+        {
+          "name": "Supprimer user (admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/users/1", "host": ["{{base_url}}"], "path": ["api","users","1"] }
+          }
+        }
+
+      ]
+    },
+
+    {
+      "name": "Profil",
+      "item": [
+
+        {
+          "name": "Modifier mon profil",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Benali\",\n  \"prenom\": \"Youssef\",\n  \"telephone\": \"0655443322\",\n  \"adresse\": \"20 Rue Mohammed V, Rabat\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/api/profile", "host": ["{{base_url}}"], "path": ["api","profile"] }
+          }
+        }
+
+      ]
+    }
+
+  ]
+}

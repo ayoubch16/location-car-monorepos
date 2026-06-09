@@ -1,0 +1,55 @@
+# ============================================================
+# Dépendances — installées via composer install
+# ============================================================
+/vendor/
+
+# ============================================================
+# Environnement — contient des secrets (DB, clés API...)
+# .env.example est conservé comme modèle
+# ============================================================
+.env
+.env.backup
+.env.production
+
+# ============================================================
+# Cache Bootstrap — généré automatiquement par artisan
+# php artisan config:cache
+# php artisan route:cache
+# php artisan view:cache
+# ============================================================
+/bootstrap/cache/*.php
+
+# ============================================================
+# Storage — fichiers générés à l'exécution
+# php artisan storage:link  (crée public/storage)
+# ============================================================
+/storage/framework/cache/data/
+/storage/framework/sessions/
+/storage/framework/testing/
+/storage/framework/views/
+/storage/logs/
+/public/storage
+/public/hot
+
+# ============================================================
+# Tests
+# ============================================================
+.phpunit.result.cache
+/coverage/
+
+# ============================================================
+# Éditeurs et OS
+# ============================================================
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# ============================================================
+# Node (si frontend ajouté plus tard)
+# ============================================================
+/node_modules/
+npm-debug.log
+yarn-error.log

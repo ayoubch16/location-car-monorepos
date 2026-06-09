@@ -1,0 +1,45 @@
+{
+  "pages": {
+    "auth": {
+      "login": {
+        "title": "Connexion",
+        "subtitle": "Entrez votre email et votre mot de passe pour vous connecter !",
+        "outlook": "Se connecter avec Outlook",
+        "or": "Ou",
+        "emailLabel": "Email",
+        "emailPlaceholder": "Saisissez votre email",
+        "passwordLabel": "Mot de passe",
+        "passwordPlaceholder": "Saisissez votre mot de passe",
+        "keepLoggedIn": "Rester connecté",
+        "forgotPassword": "Mot de passe oublié ?",
+        "submit": "Se connecter"
+      },
+      "reset": {
+        "title": "Réinitialiser le mot de passe",
+        "subtitle": "Entrez votre email pour recevoir un lien de réinitialisation.",
+        "emailLabel": "Email",
+        "emailPlaceholder": "Saisissez votre email",
+        "alreadyHaveAccount": "Vous avez déjà un compte ?",
+        "submit": "Envoyer le lien",
+        "backToLogin": "Retour à la connexion",
+        "success": "Si un compte existe pour cet email, un lien de réinitialisation a été envoyé."
+      }
+    },
+    "notFound": {
+      "title": "ERREUR",
+      "message": "Nous ne parvenons pas à trouver la page que vous recherchez !",
+      "button": "Retour à la page d’accueil"
+    }
+  },
+  "components": {
+    "footer": {
+      "first-line": "Location Voiture",
+      "seconde-line": "Tous les droits réservés"
+    }
+  },
+  "validation": {
+    "required": "Ce champ est requis",
+    "invalidEmail": "Adresse email invalide",
+    "minPassword": "Le mot de passe doit contenir au moins 6 caractères"
+  }
+}

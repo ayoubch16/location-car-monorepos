@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoLoc — Réserver un véhicule</title>
+    <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<!-- ── Header ──────────────────────────────────────────────────────────────── -->
+<header class="site-header">
+    <div class="header-inner">
+        <a href="index.html" class="logo"><span class="icon">🚗</span> AutoLoc</a>
+        <nav class="site-nav">
+            <a href="mes-reservations.html" data-show="auth" class="nav-link hidden">Mes réservations</a>
+            <span class="nav-user" data-show="auth" data-username></span>
+            <button onclick="logout()" data-show="auth" class="btn btn-ghost btn-sm hidden">Déconnexion</button>
+        </nav>
+    </div>
+</header>
+
+<!-- ── Breadcrumb ───────────────────────────────────────────────────────────── -->
+<div class="container" style="padding-top:1.25rem">
+    <nav style="font-size:.82rem;color:var(--gray-500)">
+        <a href="index.html" style="color:var(--primary);text-decoration:none">Accueil</a>
+        <span style="margin:0 .4rem">›</span>
+        <span>Réservation</span>
+    </nav>
+</div>
+
+<!-- ── Contenu ─────────────────────────────────────────────────────────────── -->
+<main class="container page-body">
+
+    <!-- Chargement -->
+    <div id="loading" class="spinner-wrap"><div class="spinner"></div></div>
+
+    <!-- Erreur voiture introuvable -->
+    <div id="state-error" class="state-empty hidden">
+        <div class="icon">⚠️</div>
+        <h3>Véhicule introuvable</h3>
+        <p>Ce véhicule n'existe pas ou n'est plus disponible.</p>
+        <a href="index.html" class="btn btn-primary" style="margin-top:1rem">Retour aux voitures</a>
+    </div>
+
+    <!-- Confirmation succès -->
+    <div id="state-success" class="hidden" style="max-width:520px;margin:0 auto;text-align:center;padding:3rem 1.5rem">
+        <div style="font-size:3.5rem;margin-bottom:1rem">✅</div>
+        <h2 style="font-size:1.5rem;font-weight:800;color:var(--gray-900);margin-bottom:.5rem">Réservation confirmée !</h2>
+        <p style="color:var(--gray-500);margin-bottom:1.5rem">Votre demande a bien été envoyée. Un administrateur va la traiter rapidement.</p>
+        <div style="display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap">
+            <a href="mes-reservations.html" class="btn btn-primary">Voir mes réservations</a>
+            <a href="index.html" class="btn btn-ghost">Retour à l'accueil</a>
+        </div>
+    </div>
+
+    <!-- Formulaire de réservation -->
+    <div id="resa-content" class="hidden">
+        <h1 class="section-title">Réserver un véhicule</h1>
+
+        <div class="resa-layout">
+
+            <!-- ── Formulaire ───────────────────────────────────────────────── -->
+            <div>
+                <div class="card">
+                    <div class="card-header">Détails de la réservation</div>
+                    <div class="card-body">
+
+                        <div id="form-alert" class="alert alert-danger hidden"></div>
+
+                        <form id="form-resa" novalidate>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem" class="mb-4">
+                                <div class="form-group">
+                                    <label class="form-label" for="date_debut">Date de début *</label>
+                                    <input class="form-input" type="date" id="date_debut" name="date_debut" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="date_fin">Date de fin *</label>
+                                    <input class="form-input" type="date" id="date_fin" name="date_fin" required>
+                                </div>
+                            </div>
+                            <div class="form-group mb-4">
+                                <label class="form-label" for="lieu_prise_en_charge">Lieu de prise en charge *</label>
+                                <input class="form-input" type="text" id="lieu_prise_en_charge"
+                                       name="lieu_prise_en_charge" placeholder="Ex : Agence centrale, Casablanca" required>
+                            </div>
+                            <div class="form-group mb-6">
+                                <label class="form-label" for="lieu_retour">Lieu de retour *</label>
+                                <input class="form-input" type="text" id="lieu_retour"
+                                       name="lieu_retour" placeholder="Ex : Aéroport Mohammed V" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-full btn-lg" id="submit-btn" disabled>
+                                Confirmer la réservation
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Récapitulatif voiture ────────────────────────────────────── -->
+            <div>
+                <div class="card" id="car-summary">
+                    <div class="car-card-img" style="height:180px;border-radius:var(--radius) var(--radius) 0 0">🚗</div>
+                    <div class="card-body">
+                        <h2 id="sum-name" style="font-size:1.2rem;font-weight:800;color:var(--gray-900)"></h2>
+                        <p id="sum-sub"   style="color:var(--gray-500);font-size:.85rem;margin-top:.2rem"></p>
+                        <div style="margin:1rem 0;display:flex;flex-direction:column;gap:.4rem">
+                            <div class="car-card-row"><span>Immatriculation</span><span id="sum-immat"></span></div>
+                            <div class="car-card-row"><span>Kilométrage</span>    <span id="sum-km"></span></div>
+                            <div class="car-card-row"><span>Prix / jour</span>    <span id="sum-prix" style="color:var(--primary);font-weight:800"></span></div>
+                        </div>
+
+                        <!-- Calcul de prix ─────────────────────────────────── -->
+                        <div id="price-calc" class="price-calc hidden">
+                            <div class="price-row"><span>Prix / jour</span>   <span id="calc-prix-jour"></span></div>
+                            <div class="price-row"><span>Durée</span>         <span id="calc-duree"></span></div>
+                            <div class="price-total"><span>Total estimé</span><span id="calc-total"></span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top:1rem">
+                    <div class="card-body" style="font-size:.82rem;color:var(--gray-500);line-height:1.7">
+                        <p><strong style="color:var(--gray-700)">ℹ️ Information</strong></p>
+                        <p>Votre réservation sera en statut <em>En attente</em> jusqu'à la confirmation par notre équipe. Vous serez notifié par email.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="assets/app.js"></script>
+<script>
+// Protection de la page
+if (!requireAuth()) { /* redirect handled inside */ }
+
+let voiture = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+    updateNav();
+
+    const params    = new URLSearchParams(window.location.search);
+    const voitureId = params.get('voiture_id');
+    if (!voitureId) { showError(); return; }
+
+    loadVoiture(voitureId);
+
+    // Date min = aujourd'hui
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('date_debut').min = today;
+    document.getElementById('date_fin').min   = today;
+
+    document.getElementById('date_debut').addEventListener('change', onDatesChange);
+    document.getElementById('date_fin').addEventListener('change', onDatesChange);
+});
+
+async function loadVoiture(id) {
+    try {
+        const data = await apiGet('/voitures/' + id);
+        voiture = data.voiture;
+
+        if (!voiture.disponible) { showError(); return; }
+
+        // Remplir le récapitulatif
+        document.getElementById('sum-name').textContent  = voiture.marque + ' ' + voiture.modele;
+        document.getElementById('sum-sub').textContent   = voiture.annee + ' · ' + voiture.couleur;
+        document.getElementById('sum-immat').textContent = voiture.immatriculation;
+        document.getElementById('sum-km').textContent    = voiture.kilometrage
+            ? Number(voiture.kilometrage).toLocaleString('fr-FR') + ' km' : '—';
+        document.getElementById('sum-prix').textContent  = fmtPrice(voiture.prix_par_jour);
+
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('resa-content').classList.remove('hidden');
+
+    } catch (err) {
+        showError();
+    }
+}
+
+function showError() {
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('state-error').classList.remove('hidden');
+}
+
+function onDatesChange() {
+    const debut = document.getElementById('date_debut').value;
+    const fin   = document.getElementById('date_fin').value;
+
+    // date_fin doit être >= date_debut
+    if (debut) document.getElementById('date_fin').min = debut;
+
+    const calcEl  = document.getElementById('price-calc');
+    const submitEl = document.getElementById('submit-btn');
+
+    if (debut && fin && fin >= debut && voiture) {
+        const d1   = new Date(debut);
+        const d2   = new Date(fin);
+        const days = Math.round((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
+        const total = days * parseFloat(voiture.prix_par_jour);
+
+        document.getElementById('calc-prix-jour').textContent = fmtPrice(voiture.prix_par_jour);
+        document.getElementById('calc-duree').textContent     = days + ' jour' + (days > 1 ? 's' : '');
+        document.getElementById('calc-total').textContent     = fmtPrice(total);
+
+        calcEl.classList.remove('hidden');
+        submitEl.disabled = false;
+    } else {
+        calcEl.classList.add('hidden');
+        submitEl.disabled = true;
+    }
+}
+
+document.getElementById('form-resa').addEventListener('submit', async e => {
+    e.preventDefault();
+    clearFieldErrors();
+
+    const alertEl = document.getElementById('form-alert');
+    alertEl.classList.add('hidden');
+    const btn = document.getElementById('submit-btn');
+    btn.disabled    = true;
+    btn.textContent = 'Envoi en cours…';
+
+    const debut = document.getElementById('date_debut').value;
+    const fin   = document.getElementById('date_fin').value;
+    const days  = Math.round((new Date(fin) - new Date(debut)) / (1000 * 60 * 60 * 24)) + 1;
+
+    const payload = {
+        voiture_id:           voiture.id,
+        date_debut:           debut,
+        date_fin:             fin,
+        duree_jours:          days,
+        lieu_prise_en_charge: document.getElementById('lieu_prise_en_charge').value.trim(),
+        lieu_retour:          document.getElementById('lieu_retour').value.trim(),
+    };
+
+    try {
+        await apiPost('/locations', payload);
+
+        document.getElementById('resa-content').classList.add('hidden');
+        document.getElementById('state-success').classList.remove('hidden');
+
+    } catch (err) {
+        btn.disabled    = false;
+        btn.textContent = 'Confirmer la réservation';
+
+        if (err.status === 422) {
+            showApiErrors(err.data);
+            alertEl.textContent = err.data?.message || 'Veuillez corriger les erreurs.';
+            alertEl.classList.remove('hidden');
+        } else if (err.status === 409) {
+            alertEl.textContent = 'Ce véhicule n\'est plus disponible pour les dates sélectionnées.';
+            alertEl.classList.remove('hidden');
+        } else {
+            alertEl.textContent = err.message || 'Erreur lors de la réservation.';
+            alertEl.classList.remove('hidden');
+        }
+    }
+});
+</script>
+</body>
+</html>

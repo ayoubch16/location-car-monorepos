@@ -1,0 +1,45 @@
+{
+  "pages": {
+    "auth": {
+      "login": {
+        "title": "Sign In",
+        "subtitle": "Enter your email and password to sign in!",
+        "outlook": "Sign in with Outlook",
+        "or": "Or",
+        "emailLabel": "Email",
+        "emailPlaceholder": "Enter your email",
+        "passwordLabel": "Password",
+        "passwordPlaceholder": "Enter your password",
+        "keepLoggedIn": "Keep me logged in",
+        "forgotPassword": "Forgot password?",
+        "submit": "Sign in"
+      },
+      "reset": {
+        "title": "Reset Password",
+        "subtitle": "Enter your email to receive a password reset link.",
+        "emailLabel": "Email",
+        "emailPlaceholder": "Enter your email",
+        "alreadyHaveAccount": "Already have an account?",
+        "submit": "Send reset link",
+        "backToLogin": "Back to Sign In",
+        "success": "If an account exists for this email, a reset link has been sent."
+      }
+    },
+    "notFound": {
+      "title": "ERROR",
+      "message": "We can’t seem to find the page you are looking for!",
+      "button": "Back to Home Page"
+    }
+  },
+  "components": {
+    "footer": {
+      "first-line": "Location Voiture",
+      "seconde-line": "All Rights Reserved"
+    }
+  },
+  "validation": {
+    "required": "This field is required",
+    "invalidEmail": "Invalid email address",
+    "minPassword": "Password must be at least 6 characters"
+  }
+}

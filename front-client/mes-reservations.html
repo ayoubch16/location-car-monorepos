@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoLoc — Mes Réservations</title>
+    <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<!-- ── Header ──────────────────────────────────────────────────────────────── -->
+<header class="site-header">
+    <div class="header-inner">
+        <a href="index.html" class="logo"><span class="icon">🚗</span> AutoLoc</a>
+        <nav class="site-nav">
+            <a href="index.html" class="nav-link">Nos voitures</a>
+            <span class="nav-user" data-show="auth" data-username></span>
+            <button onclick="logout()" data-show="auth" class="btn btn-ghost btn-sm hidden">Déconnexion</button>
+        </nav>
+    </div>
+</header>
+
+<!-- ── Contenu ─────────────────────────────────────────────────────────────── -->
+<main class="container page-body">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:.75rem">
+        <h1 class="section-title" style="margin-bottom:0">Mes Réservations</h1>
+        <a href="index.html" class="btn btn-primary btn-sm">+ Nouvelle réservation</a>
+    </div>
+
+    <!-- Chargement -->
+    <div id="loading" class="spinner-wrap"><div class="spinner"></div></div>
+
+    <!-- Erreur -->
+    <div id="state-error" class="state-error hidden">
+        <p id="error-text">Impossible de charger vos réservations.</p>
+        <button onclick="loadLocations()" class="btn btn-outline btn-sm" style="margin-top:.75rem">Réessayer</button>
+    </div>
+
+    <!-- Aucune réservation -->
+    <div id="state-empty" class="state-empty hidden">
+        <div class="icon">📋</div>
+        <h3>Aucune réservation</h3>
+        <p>Vous n'avez pas encore effectué de réservation.</p>
+        <a href="index.html" class="btn btn-primary" style="margin-top:1rem">Réserver maintenant</a>
+    </div>
+
+    <!-- Liste des réservations -->
+    <div id="resa-list" class="hidden"></div>
+
+</main>
+
+<!-- ── Modal confirmation annulation ───────────────────────────────────────── -->
+<div id="modal-overlay" class="hidden" style="
+    position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;
+    display:flex;align-items:center;justify-content:center;padding:1rem">
+    <div style="background:var(--white);border-radius:16px;padding:2rem;max-width:400px;width:100%;box-shadow:var(--shadow-md)">
+        <h3 style="font-size:1.1rem;font-weight:800;margin-bottom:.5rem;color:var(--gray-900)">Annuler la réservation ?</h3>
+        <p style="color:var(--gray-500);font-size:.875rem;margin-bottom:1.5rem">
+            Cette action est irréversible. Votre réservation sera annulée définitivement.
+        </p>
+        <div style="display:flex;gap:.75rem;justify-content:flex-end">
+            <button onclick="closeModal()" class="btn btn-ghost">Non, garder</button>
+            <button id="confirm-cancel-btn" class="btn btn-danger">Oui, annuler</button>
+        </div>
+    </div>
+</div>
+
+<script src="assets/app.js"></script>
+<script>
+// Protection de la page
+if (!requireAuth()) { /* redirect handled */ }
+
+let cancelTargetId = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+    updateNav();
+    loadLocations();
+});
+
+async function loadLocations() {
+    const loadEl  = document.getElementById('loading');
+    const errEl   = document.getElementById('state-error');
+    const emptyEl = document.getElementById('state-empty');
+    const listEl  = document.getElementById('resa-list');
+
+    loadEl.classList.remove('hidden');
+    [errEl, emptyEl, listEl].forEach(el => el.classList.add('hidden'));
+    listEl.innerHTML = '';
+
+    try {
+        const data = await apiGet('/locations');
+        loadEl.classList.add('hidden');
+
+        const locations = data.locations?.data ?? data.locations ?? [];
+
+        if (!locations.length) { emptyEl.classList.remove('hidden'); return; }
+
+        listEl.classList.remove('hidden');
+        listEl.appendChild(buildTable(locations));
+
+        // Afficher aussi un résumé
+        const counts = { en_attente: 0, en_cours: 0, terminee: 0, annulee: 0 };
+        locations.forEach(l => { if (counts[l.statut] !== undefined) counts[l.statut]++; });
+        const summary = buildSummary(counts, locations.length);
+        listEl.prepend(summary);
+
+    } catch (err) {
+        loadEl.classList.add('hidden');
+        document.getElementById('error-text').textContent = err.message || 'Impossible de charger vos réservations.';
+        errEl.classList.remove('hidden');
+    }
+}
+
+function buildSummary(counts, total) {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1.25rem';
+    const items = [
+        { label: 'Total',       value: total,              cls: 'badge-secondary' },
+        { label: 'En attente',  value: counts.en_attente,  cls: 'badge-warning'   },
+        { label: 'En cours',    value: counts.en_cours,    cls: 'badge-info'      },
+        { label: 'Terminées',   value: counts.terminee,    cls: 'badge-success'   },
+        { label: 'Annulées',    value: counts.annulee,     cls: 'badge-danger'    },
+    ];
+    items.forEach(({ label, value, cls }) => {
+        if (value === 0 && label !== 'Total') return;
+        const chip = document.createElement('div');
+        chip.style.cssText = 'display:flex;align-items:center;gap:.4rem;background:var(--white);padding:.5rem .85rem;border-radius:999px;border:1px solid var(--gray-200);font-size:.8rem;font-weight:600;color:var(--gray-700)';
+        chip.innerHTML = `<span class="badge ${cls}" style="min-width:1.5rem;justify-content:center">${value}</span> ${label}`;
+        wrap.appendChild(chip);
+    });
+    return wrap;
+}
+
+function buildTable(locations) {
+    // Version responsive : cartes sur mobile, table sur desktop
+    const wrapper = document.createElement('div');
+
+    // ── Table (desktop) ─────────────────────────────────────────────────────
+    const tableWrap = document.createElement('div');
+    tableWrap.className = 'card table-wrap';
+    tableWrap.style.cssText = 'display:none';
+    if (window.innerWidth >= 640) tableWrap.style.display = 'block';
+
+    const table = document.createElement('table');
+    table.innerHTML = `
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Véhicule</th>
+                <th>Période</th>
+                <th>Durée</th>
+                <th>Lieu prise</th>
+                <th>Total</th>
+                <th>Statut</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+    `;
+    const tbody = table.querySelector('#table-body');
+    locations.forEach(loc => tbody.appendChild(buildRow(loc)));
+    tableWrap.appendChild(table);
+    wrapper.appendChild(tableWrap);
+
+    // ── Cartes (mobile) ─────────────────────────────────────────────────────
+    const cardsWrap = document.createElement('div');
+    cardsWrap.style.cssText = 'display:flex;flex-direction:column;gap:.85rem';
+    if (window.innerWidth >= 640) cardsWrap.style.display = 'none';
+    locations.forEach(loc => cardsWrap.appendChild(buildCard(loc)));
+    wrapper.appendChild(cardsWrap);
+
+    window.addEventListener('resize', () => {
+        tableWrap.style.display = window.innerWidth >= 640 ? 'block' : 'none';
+        cardsWrap.style.display = window.innerWidth >= 640 ? 'none'  : 'flex';
+    }, { passive: true });
+
+    return wrapper;
+}
+
+function buildRow(loc) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td style="color:var(--gray-400);font-size:.78rem">#${loc.id}</td>
+        <td>
+            <div style="font-weight:700;color:var(--gray-900)">${loc.voiture ? loc.voiture.marque + ' ' + loc.voiture.modele : '—'}</div>
+            <div style="font-size:.75rem;color:var(--gray-500)">${loc.voiture?.immatriculation ?? ''}</div>
+        </td>
+        <td>
+            <div style="font-size:.82rem">${fmtDate(loc.date_debut)}</div>
+            <div style="font-size:.78rem;color:var(--gray-500)">→ ${fmtDate(loc.date_fin)}</div>
+        </td>
+        <td style="font-size:.82rem">${loc.duree_jours} j</td>
+        <td style="font-size:.78rem;max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${loc.lieu_prise_en_charge}</td>
+        <td style="font-weight:700;color:var(--primary)">${fmtPrice(loc.montant_total)}</td>
+        <td>${statusBadge(loc.statut)}</td>
+        <td>${loc.statut === 'en_attente' ? `<button onclick="askCancel(${loc.id})" class="btn btn-danger btn-sm">Annuler</button>` : ''}</td>
+    `;
+    return tr;
+}
+
+function buildCard(loc) {
+    const div = document.createElement('div');
+    div.className = 'card';
+    div.innerHTML = `
+        <div class="card-body">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.75rem">
+                <div>
+                    <div style="font-weight:800;color:var(--gray-900)">${loc.voiture ? loc.voiture.marque + ' ' + loc.voiture.modele : '—'}</div>
+                    <div style="font-size:.78rem;color:var(--gray-400)">${loc.voiture?.immatriculation ?? ''}</div>
+                </div>
+                ${statusBadge(loc.statut)}
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;font-size:.82rem;margin-bottom:.75rem">
+                <div><span style="color:var(--gray-500)">Début</span><br><strong>${fmtDate(loc.date_debut)}</strong></div>
+                <div><span style="color:var(--gray-500)">Fin</span><br><strong>${fmtDate(loc.date_fin)}</strong></div>
+                <div><span style="color:var(--gray-500)">Durée</span><br><strong>${loc.duree_jours} jour${loc.duree_jours > 1 ? 's' : ''}</strong></div>
+                <div><span style="color:var(--gray-500)">Total</span><br><strong style="color:var(--primary)">${fmtPrice(loc.montant_total)}</strong></div>
+            </div>
+            <div style="font-size:.78rem;color:var(--gray-500);margin-bottom:.75rem">
+                <span>📍 ${loc.lieu_prise_en_charge}</span>
+                ${loc.lieu_retour !== loc.lieu_prise_en_charge ? `<span style="margin-left:.75rem">🏁 ${loc.lieu_retour}</span>` : ''}
+            </div>
+            ${loc.statut === 'en_attente'
+                ? `<button onclick="askCancel(${loc.id})" class="btn btn-danger btn-sm">Annuler la réservation</button>`
+                : ''}
+        </div>
+    `;
+    return div;
+}
+
+// ── Annulation ───────────────────────────────────────────────────────────────
+function askCancel(id) {
+    cancelTargetId = id;
+    document.getElementById('modal-overlay').classList.remove('hidden');
+    document.getElementById('modal-overlay').style.display = 'flex';
+    document.getElementById('confirm-cancel-btn').onclick = confirmCancel;
+}
+
+function closeModal() {
+    cancelTargetId = null;
+    document.getElementById('modal-overlay').classList.add('hidden');
+    document.getElementById('modal-overlay').style.display = 'none';
+}
+
+async function confirmCancel() {
+    if (!cancelTargetId) return;
+    const btn = document.getElementById('confirm-cancel-btn');
+    btn.disabled    = true;
+    btn.textContent = 'Annulation…';
+
+    try {
+        await apiPost('/locations/' + cancelTargetId + '/cancel');
+        closeModal();
+        toast('Réservation annulée avec succès.', 'success');
+        loadLocations();
+    } catch (err) {
+        closeModal();
+        toast(err.message || 'Erreur lors de l\'annulation.', 'error');
+    } finally {
+        btn.disabled    = false;
+        btn.textContent = 'Oui, annuler';
+    }
+}
+
+// Fermer le modal en cliquant sur l'overlay
+document.getElementById('modal-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('modal-overlay')) closeModal();
+});
+</script>
+</body>
+</html>
