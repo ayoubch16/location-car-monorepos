@@ -122,7 +122,7 @@ class LocationController extends Controller
     {
         // Valide que le statut envoyé est l'une des valeurs autorisées
         $request->validate([
-            'statut' => 'required|in:en_attente,confirmee,en_cours,terminee,annulee',
+            'statut' => 'required|in:en_attente,confirmee,en_cours,terminee,annulee,non_paye',
         ]);
 
         // Sauvegarde l'ancien statut (non utilisé ici mais utile pour des logs futurs)

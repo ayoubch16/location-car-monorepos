@@ -1,0 +1,17 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Support\Facades\DB;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        DB::statement("ALTER TABLE locations MODIFY COLUMN statut ENUM('en_attente','confirmee','en_cours','terminee','annulee','non_paye') NOT NULL DEFAULT 'en_attente'");
+    }
+
+    public function down(): void
+    {
+        DB::statement("ALTER TABLE locations MODIFY COLUMN statut ENUM('en_attente','confirmee','en_cours','terminee','annulee') NOT NULL DEFAULT 'en_attente'");
+    }
+};

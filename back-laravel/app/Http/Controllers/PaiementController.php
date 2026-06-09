@@ -140,6 +140,54 @@ class PaiementController extends Controller
     }
 
     /**
+     * Admin confirme le paiement d'une location en attente.
+     * Enregistre le paiement et passe la location en "confirmee".
+     * POST /api/paiements/{id}/admin-pay
+     */
+    public function adminPay(PaiementRequest $request, Paiement $paiement): JsonResponse
+    {
+        if ($paiement->statut !== 'en_attente') {
+            return response()->json([
+                'message' => 'Ce paiement ne peut plus être modifié.',
+            ], 409);
+        }
+
+        $paiement->update([
+            'methode'       => $request->methode,
+            'statut'        => 'paye',
+            'date_paiement' => now(),
+        ]);
+
+        $paiement->location->update(['statut' => 'confirmee']);
+
+        return response()->json([
+            'message'  => 'Paiement confirmé et location mise à jour.',
+            'paiement' => $paiement->fresh(),
+        ]);
+    }
+
+    /**
+     * Admin marque un paiement comme non payé.
+     * Annule le paiement et passe la location en "non_paye".
+     * POST /api/paiements/{id}/mark-unpaid
+     */
+    public function markUnpaid(Paiement $paiement): JsonResponse
+    {
+        if ($paiement->statut !== 'en_attente') {
+            return response()->json([
+                'message' => 'Ce paiement ne peut plus être modifié.',
+            ], 409);
+        }
+
+        $paiement->update(['statut' => 'annule']);
+        $paiement->location->update(['statut' => 'non_paye']);
+
+        return response()->json([
+            'message' => 'Location marquée comme non payée.',
+        ]);
+    }
+
+    /**
      * Rembourse un paiement (admin uniquement).
      * Annule la location et remet la voiture disponible.
      * POST /api/paiements/{id}/refund

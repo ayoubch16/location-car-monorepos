@@ -68,7 +68,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/locations/{location}', [LocationController::class, 'destroy']); // Supprimer une location
 
         // Gestion des paiements
-        Route::post('/paiements/{paiement}/refund', [PaiementController::class, 'refund']); // Rembourser un paiement
+        Route::post('/paiements/{paiement}/refund',      [PaiementController::class, 'refund']);     // Rembourser un paiement
+        Route::post('/paiements/{paiement}/admin-pay',   [PaiementController::class, 'adminPay']);   // Admin confirme le paiement
+        Route::post('/paiements/{paiement}/mark-unpaid', [PaiementController::class, 'markUnpaid']); // Admin marque non payé
     });
 
     /*

@@ -1,4 +1,4 @@
-export type PaiementStatut = "en_attente" | "paye" | "rembourse";
+export type PaiementStatut = "en_attente" | "paye" | "rembourse" | "annule";
 
 export type Paiement = {
   id: number;

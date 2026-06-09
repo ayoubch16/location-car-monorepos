@@ -10,9 +10,8 @@ use Illuminate\Foundation\Configuration\Middleware;
 // Configure les routes, les middlewares et la gestion des erreurs.
 return Application::configure(basePath: dirname(__DIR__)) // Définit la racine du projet
     ->withRouting(
-        api: __DIR__ . '/../routes/api.php',              // Fichier des routes API (préfixe /api automatique)
-        apiPrefix: 'api',                                  // Toutes les routes API seront sous /api/...
-        commands: __DIR__ . '/../routes/console.php',     // Fichier des commandes Artisan personnalisées
+        api: __DIR__ . '/../routes/api.php',
+        apiPrefix: 'api',
     )
     ->withMiddleware(function (Middleware $middleware) {
         // Enregistre les alias de middleware pour les utiliser dans les routes

@@ -3,7 +3,8 @@ export type LocationStatut =
   | "confirmee"
   | "en_cours"
   | "terminee"
-  | "annulee";
+  | "annulee"
+  | "non_paye";
 
 export type LocationVoiture = {
   id: number;
@@ -19,11 +20,19 @@ export type LocationUser = {
   email: string;
 };
 
+export type LocationPaiement = {
+  id: number;
+  montant: number;
+  methode?: string | null;
+  statut: "en_attente" | "paye" | "rembourse" | "annule";
+};
+
 export type Location = {
   id: number;
   voiture_id: number;
   voiture?: LocationVoiture;
   user?: LocationUser;
+  paiement?: LocationPaiement;
   date_debut: string;
   date_fin: string;
   lieu_prise_en_charge: string;
