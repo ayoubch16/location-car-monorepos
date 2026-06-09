@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/ACER/Desktop/PHP-PROJECT/location-car-monorepos/back-laravel/routes/**)",
+      "Bash(ls \"c:/Users/ACER/Desktop/PHP-PROJECT/location-car-monorepos/back-laravel/storage/framework/\" 2>/dev/null || echo \"directory missing\")",
+      "Read(//c/Users/ACER/Desktop/PHP-PROJECT/location-car-monorepos/back-laravel/storage/**)",
+      "Bash(grep \"CACHE\" \"c:/Users/ACER/Desktop/PHP-PROJECT/location-car-monorepos/back-laravel/.env\")",
+      "Read(//c/Users/ACER/Desktop/PHP-PROJECT/location-car-monorepos/back-laravel/**)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\ACER\\Desktop\\PHP-PROJECT\\location-car-monorepos\\back-laravel\\app\\Http\\Controllers"
+    ]
+  }
+}

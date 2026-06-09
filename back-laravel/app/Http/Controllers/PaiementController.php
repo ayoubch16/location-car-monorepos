@@ -22,7 +22,7 @@ class PaiementController extends Controller
         $user  = $request->user();
 
         // Charge la relation voiture via location (évite les requêtes N+1)
-        $query = Paiement::with('location.voiture');
+        $query = Paiement::with('location.voiture', 'location.user');
 
         // Si c'est un client, filtre uniquement ses paiements via la relation location
         if ($user->isClient()) {

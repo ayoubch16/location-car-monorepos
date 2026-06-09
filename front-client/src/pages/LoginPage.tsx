@@ -83,14 +83,16 @@ function LoginForm({ redirect }: { redirect: string }) {
       const { data } = await client.post("auth/login", { email, password });
       auth.setToken(data.access_token as string);
       auth.setUser(data.user);
+      toast.success("Connexion réussie !");
       navigate(redirect, { replace: true });
     } catch (err) {
       const e = err as ApiError;
-      if (e.response?.status === 401) {
-        setError("Email ou mot de passe incorrect.");
-      } else {
-        setError(e.response?.data?.message ?? "Erreur de connexion.");
-      }
+      const msg =
+        e.response?.status === 401
+          ? "Email ou mot de passe incorrect."
+          : (e.response?.data?.message ?? "Erreur de connexion.");
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -173,7 +175,9 @@ function RegisterForm({ onSuccess }: { onSuccess: () => void }) {
       onSuccess();
     } catch (err) {
       const e = err as ApiError;
-      setError(e.response?.data?.message ?? "Erreur lors de l'inscription.");
+      const msg = e.response?.data?.message ?? "Erreur lors de l'inscription.";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }

@@ -52,7 +52,10 @@ export default function ReservationPage() {
         lieu_retour:          lieuRetour,
       },
       {
-        onSuccess: () => setSuccess(true),
+        onSuccess: () => {
+          toast.success("Votre réservation a bien été envoyée !");
+          setSuccess(true);
+        },
         onError: (err) => {
           const e = err as ApiError;
           if (e.response?.status === 409) {

@@ -20,6 +20,7 @@ import {
 } from "api/paiements";
 import type { Paiement, PaiementStatut } from "api/paiements/types";
 import { client } from "api/client";
+import toast from "react-hot-toast";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -139,6 +140,7 @@ export function PaiementsPage() {
     refund(p.id, { onSettled: () => setRefundingId(null) });
   };
   const handleDevis = async (p: Paiement) => {
+    const toastId = toast.loading("Génération du devis…");
     try {
       const resp = await client.get(`paiements/${p.id}/devis`, {
         responseType: "blob",
@@ -147,10 +149,13 @@ export function PaiementsPage() {
       const a = document.createElement("a");
       a.href = url;
       a.download = `devis-${p.id}.pdf`;
+      document.body.appendChild(a);
       a.click();
-      URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      toast.success("Devis téléchargé", { id: toastId });
     } catch {
-      // silent
+      toast.error("Impossible de générer le devis", { id: toastId });
     }
   };
 
@@ -267,13 +272,15 @@ export function PaiementsPage() {
                               Rembourser
                             </button>
                           )}
-                          <button
-                            onClick={() => handleDevis(p)}
-                            className="p-1.5 rounded-lg text-gray-500 hover:text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-colors"
-                            title="Télécharger devis PDF"
-                          >
-                            <DownloadIcon className="size-4" />
-                          </button>
+                          {p.statut === "paye" && (
+                            <button
+                              onClick={() => handleDevis(p)}
+                              className="p-1.5 rounded-lg text-gray-500 hover:text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-colors"
+                              title="Télécharger devis PDF"
+                            >
+                              <DownloadIcon className="size-4" />
+                            </button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>

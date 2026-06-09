@@ -1,4 +1,5 @@
 import { useQuery } from "react-query";
+import toast from "react-hot-toast";
 import { client } from "./client";
 import type { Voiture } from "../types";
 
@@ -27,6 +28,9 @@ export function useVoitures(filters: VoitureFilters) {
       const { data } = await client.get("voitures", { params });
       return data.voitures ?? data;
     },
-    { keepPreviousData: true },
+    {
+      keepPreviousData: true,
+      onError: () => toast.error("Erreur lors du chargement des voitures."),
+    },
   );
 }

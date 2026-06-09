@@ -19,12 +19,7 @@ export function LoadingPage() {
           <ThemeTogglerTwo />
         </div>
         <div className="mx-auto  max-w-[630px] text-center flex-column items-center justify-center">
-          <img
-            width={400}
-            height={60}
-            src={theme === "light" ? LOGO_LIGHT : LOGO_DARK}
-            alt="Logo"
-          />
+          <img width={400} height={60} src={"/images/favicon.png"} alt="Logo" />
           <div className="w-full flex items-center justify-center">
             <div className="max-w-[200px] ">
               <Lottie animationData={Loading} loop={true} />
