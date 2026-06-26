@@ -16,10 +16,6 @@ class AuthController extends Controller
 {
     use GeneratesTokens;
 
-    /**
-     * Inscription d'un nouveau client.
-     * POST /api/auth/register
-     */
     public function register(Request $request): JsonResponse
     {
         $request->validate([
@@ -56,20 +52,15 @@ class AuthController extends Controller
         ], 201);
     }
 
-    /**
-     * Connexion d'un utilisateur existant.
-     * POST /api/auth/login
-     */
     public function login(Request $request): JsonResponse
     {
         $request->validate([
             'email'    => 'required|email',
             'password' => 'required|string',
         ]);
+
         if (!Auth::attempt($request->only('email', 'password'))) {
-            return response()->json([
-                'message' => 'Email ou mot de passe incorrect.',
-            ], 401);
+            return response()->json(['message' => 'Email ou mot de passe incorrect.'], 401);
         }
 
         $user = User::where('email', $request->email)->firstOrFail();
@@ -80,21 +71,14 @@ class AuthController extends Controller
         ]);
     }
 
-    /**
-     * Renouvellement des tokens via refresh token.
-     * POST /api/auth/refresh
-     */
     public function refresh(Request $request): JsonResponse
     {
         $request->validate(['refresh_token' => 'required|string']);
 
-        $hashed = hash('sha256', $request->refresh_token);
-        $record = RefreshToken::where('token', $hashed)->first();
+        $record = RefreshToken::where('token', hash('sha256', $request->refresh_token))->first();
 
         if (!$record || $record->isExpired()) {
-            return response()->json([
-                'message' => 'Refresh token invalide ou expiré.',
-            ], 401);
+            return response()->json(['message' => 'Refresh token invalide ou expiré.'], 401);
         }
 
         $user = $record->user;
@@ -103,10 +87,6 @@ class AuthController extends Controller
         return response()->json([...$this->generateTokenPair($user)]);
     }
 
-    /**
-     * Déconnexion — révoque tous les tokens.
-     * POST /api/auth/logout
-     */
     public function logout(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -116,10 +96,6 @@ class AuthController extends Controller
         return response()->json(['message' => 'Déconnexion réussie.']);
     }
 
-    /**
-     * Retourne l'utilisateur connecté.
-     * GET /api/auth/me
-     */
     public function me(Request $request): JsonResponse
     {
         return response()->json([

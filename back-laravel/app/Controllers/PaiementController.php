@@ -11,18 +11,15 @@ use Illuminate\Http\Response;
 
 class PaiementController extends Controller
 {
-    /**
-     * Liste les paiements.
-     * Client → les siens. Admin → tous.
-     * GET /api/paiements
-     */
     public function index(Request $request): JsonResponse
     {
         $user  = $request->user();
         $query = Paiement::with('location.voiture', 'location.user');
 
         if ($user->isClient()) {
-            $query->whereHas('location', fn($q) => $q->where('user_id', $user->id));
+            $query->whereHas('location', function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+            });
         }
 
         return response()->json([
@@ -30,35 +27,27 @@ class PaiementController extends Controller
         ]);
     }
 
-    /**
-     * Affiche un paiement.
-     * GET /api/paiements/{id}
-     */
-    public function show(Request $request, Paiement $paiement): JsonResponse
+    public function show(Request $request, $id): JsonResponse
     {
-        $user = $request->user();
+        $paiement = Paiement::with('location.voiture')->findOrFail($id);
+        $user     = $request->user();
 
         if ($user->isClient() && $paiement->location->user_id !== $user->id) {
             return response()->json(['message' => 'Accès refusé.'], 403);
         }
 
         return response()->json([
-            'paiement' => PaiementView::make($paiement->load('location.voiture')),
+            'paiement' => PaiementView::make($paiement),
         ]);
     }
 
-    /**
-     * Le client paie sa réservation. Active la location.
-     * POST /api/paiements/{id}/pay
-     */
-    public function pay(Request $request, Paiement $paiement): JsonResponse
+    public function pay(Request $request, $id): JsonResponse
     {
-        $request->validate([
-            'methode' => 'required|in:carte_bancaire,especes,virement',
-        ]);
-        $user = $request->user();
+        $request->validate(['methode' => 'required|in:carte_bancaire,especes,virement']);
 
-        if ($paiement->location->user_id !== $user->id) {
+        $paiement = Paiement::findOrFail($id);
+
+        if ($paiement->location->user_id !== $request->user()->id) {
             return response()->json(['message' => 'Accès refusé.'], 403);
         }
 
@@ -80,13 +69,10 @@ class PaiementController extends Controller
         ]);
     }
 
-    /**
-     * Génère et télécharge le devis PDF.
-     * GET /api/paiements/{id}/devis
-     */
-    public function devis(Request $request, Paiement $paiement): Response
+    public function devis(Request $request, $id): Response
     {
-        $user = $request->user();
+        $paiement = Paiement::with('location.user', 'location.voiture')->findOrFail($id);
+        $user     = $request->user();
 
         if ($user->isClient() && $paiement->location->user_id !== $user->id) {
             abort(403, 'Accès refusé.');
@@ -95,8 +81,6 @@ class PaiementController extends Controller
         if ($paiement->statut !== 'paye') {
             abort(409, 'Le devis est disponible uniquement pour les paiements confirmés.');
         }
-
-        $paiement->load('location.user', 'location.voiture');
 
         $location      = $paiement->location;
         $client        = $location->user;
@@ -116,15 +100,12 @@ class PaiementController extends Controller
         return $pdf->download($filename);
     }
 
-    /**
-     * Admin confirme le paiement (espèces/virement). Passe la location en "confirmee".
-     * POST /api/paiements/{id}/admin-pay
-     */
-    public function adminPay(Request $request, Paiement $paiement): JsonResponse
+    public function adminPay(Request $request, $id): JsonResponse
     {
-        $request->validate([
-            'methode' => 'required|in:carte_bancaire,especes,virement',
-        ]);
+        $request->validate(['methode' => 'required|in:carte_bancaire,especes,virement']);
+
+        $paiement = Paiement::findOrFail($id);
+
         if ($paiement->statut !== 'en_attente') {
             return response()->json(['message' => 'Ce paiement ne peut plus être modifié.'], 409);
         }
@@ -143,12 +124,10 @@ class PaiementController extends Controller
         ]);
     }
 
-    /**
-     * Admin marque un paiement comme non payé.
-     * POST /api/paiements/{id}/mark-unpaid
-     */
-    public function markUnpaid(Paiement $paiement): JsonResponse
+    public function markUnpaid($id): JsonResponse
     {
+        $paiement = Paiement::findOrFail($id);
+
         if ($paiement->statut !== 'en_attente') {
             return response()->json(['message' => 'Ce paiement ne peut plus être modifié.'], 409);
         }
@@ -159,12 +138,10 @@ class PaiementController extends Controller
         return response()->json(['message' => 'Location marquée comme non payée.']);
     }
 
-    /**
-     * Admin rembourse un paiement. Annule la location et libère la voiture.
-     * POST /api/paiements/{id}/refund
-     */
-    public function refund(Paiement $paiement): JsonResponse
+    public function refund($id): JsonResponse
     {
+        $paiement = Paiement::findOrFail($id);
+
         if ($paiement->statut !== 'paye') {
             return response()->json([
                 'message' => 'Seuls les paiements payés peuvent être remboursés.',

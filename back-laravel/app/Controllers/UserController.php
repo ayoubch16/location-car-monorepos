@@ -7,14 +7,9 @@ use App\Views\UserView;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
-    /**
-     * Liste tous les utilisateurs avec filtre optionnel par rôle.
-     * GET /api/users
-     */
     public function index(Request $request): JsonResponse
     {
         $query = User::query();
@@ -28,21 +23,15 @@ class UserController extends Controller
         ]);
     }
 
-    /**
-     * Affiche un utilisateur avec ses locations.
-     * GET /api/users/{id}
-     */
-    public function show(User $user): JsonResponse
+    public function show($id): JsonResponse
     {
+        $user = User::findOrFail($id);
+
         return response()->json([
             'user' => UserView::make($user->load('locations')),
         ]);
     }
 
-    /**
-     * Crée un nouvel utilisateur (admin choisit le rôle).
-     * POST /api/users
-     */
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
@@ -67,16 +56,14 @@ class UserController extends Controller
         ], 201);
     }
 
-    /**
-     * Met à jour un utilisateur existant.
-     * PUT /api/users/{id}
-     */
-    public function update(Request $request, User $user): JsonResponse
+    public function update(Request $request, $id): JsonResponse
     {
+        $user = User::findOrFail($id);
+
         $data = $request->validate([
             'nom'            => 'sometimes|string|max:100',
             'prenom'         => 'sometimes|string|max:100',
-            'email'          => ['sometimes', 'email', Rule::unique('users')->ignore($user->id)],
+            'email'          => 'sometimes|email|unique:users,email,' . $id,
             'telephone'      => 'nullable|string|max:20',
             'adresse'        => 'nullable|string|max:255',
             'num_permis'     => 'nullable|string|max:50',
@@ -92,12 +79,10 @@ class UserController extends Controller
         ]);
     }
 
-    /**
-     * Supprime un utilisateur. Un admin ne peut pas se supprimer lui-même.
-     * DELETE /api/users/{id}
-     */
-    public function destroy(Request $request, User $user): JsonResponse
+    public function destroy(Request $request, $id): JsonResponse
     {
+        $user = User::findOrFail($id);
+
         if ($user->id === $request->user()->id) {
             return response()->json([
                 'message' => 'Vous ne pouvez pas supprimer votre propre compte.',
@@ -109,10 +94,6 @@ class UserController extends Controller
         return response()->json(['message' => 'Utilisateur supprimé avec succès.']);
     }
 
-    /**
-     * Met à jour le profil de l'utilisateur connecté.
-     * PUT /api/auth/profile
-     */
     public function updateProfile(Request $request): JsonResponse
     {
         $user = $request->user();

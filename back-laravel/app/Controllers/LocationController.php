@@ -6,16 +6,12 @@ use App\Models\Location;
 use App\Models\Paiement;
 use App\Models\Voiture;
 use App\Views\LocationView;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class LocationController extends Controller
 {
-    /**
-     * Liste les locations.
-     * Client → ses locations. Admin → toutes.
-     * GET /api/locations
-     */
     public function index(Request $request): JsonResponse
     {
         $user  = $request->user();
@@ -30,28 +26,20 @@ class LocationController extends Controller
         ]);
     }
 
-    /**
-     * Affiche une location.
-     * Client → uniquement la sienne. Admin → toutes.
-     * GET /api/locations/{id}
-     */
-    public function show(Request $request, Location $location): JsonResponse
+    public function show(Request $request, $id): JsonResponse
     {
-        $user = $request->user();
+        $location = Location::with(['voiture', 'user', 'paiement'])->findOrFail($id);
+        $user     = $request->user();
 
         if ($user->isClient() && $location->user_id !== $user->id) {
             return response()->json(['message' => 'Accès refusé.'], 403);
         }
 
         return response()->json([
-            'location' => LocationView::make($location->load(['voiture', 'user', 'paiement'])),
+            'location' => LocationView::make($location),
         ]);
     }
 
-    /**
-     * Crée une réservation, génère le paiement associé et bloque la voiture.
-     * POST /api/locations
-     */
     public function store(Request $request): JsonResponse
     {
         $request->validate([
@@ -72,10 +60,8 @@ class LocationController extends Controller
             return response()->json(['message' => 'Cette voiture n\'est pas disponible.'], 409);
         }
 
-        $dateDebut = \Carbon\Carbon::parse($request->date_debut);
-        $dateFin   = \Carbon\Carbon::parse($request->date_fin);
-        $duree     = $dateDebut->diffInDays($dateFin);
-        $montant   = $duree * $voiture->prix_par_jour;
+        $duree   = Carbon::parse($request->date_debut)->diffInDays(Carbon::parse($request->date_fin));
+        $montant = $duree * $voiture->prix_par_jour;
 
         $location = Location::create([
             'user_id'              => $request->user()->id,
@@ -105,12 +91,10 @@ class LocationController extends Controller
         ], 201);
     }
 
-    /**
-     * Modifie le statut d'une location et gère la disponibilité de la voiture.
-     * PUT /api/locations/{id}  (admin)
-     */
-    public function update(Request $request, Location $location): JsonResponse
+    public function update(Request $request, $id): JsonResponse
     {
+        $location = Location::findOrFail($id);
+
         $request->validate([
             'statut' => 'required|in:en_attente,confirmee,en_cours,terminee,annulee,non_paye',
         ]);
@@ -131,12 +115,10 @@ class LocationController extends Controller
         ]);
     }
 
-    /**
-     * Le client annule sa propre réservation (uniquement si pas encore commencée).
-     * POST /api/locations/{id}/cancel
-     */
-    public function cancel(Request $request, Location $location): JsonResponse
+    public function cancel(Request $request, $id): JsonResponse
     {
+        $location = Location::findOrFail($id);
+
         if ($location->user_id !== $request->user()->id) {
             return response()->json(['message' => 'Accès refusé.'], 403);
         }
@@ -157,12 +139,10 @@ class LocationController extends Controller
         return response()->json(['message' => 'Location annulée avec succès.']);
     }
 
-    /**
-     * Supprime une location. Interdit si en cours.
-     * DELETE /api/locations/{id}  (admin)
-     */
-    public function destroy(Location $location): JsonResponse
+    public function destroy($id): JsonResponse
     {
+        $location = Location::findOrFail($id);
+
         if ($location->statut === 'en_cours') {
             return response()->json([
                 'message' => 'Impossible de supprimer une location en cours.',
