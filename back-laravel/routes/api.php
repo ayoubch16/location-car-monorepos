@@ -1,11 +1,11 @@
 <?php
 
-use App\Http\Controllers\Auth\AuthController;
-use App\Http\Controllers\Auth\PasswordResetController;
-use App\Http\Controllers\LocationController;
-use App\Http\Controllers\PaiementController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\VoitureController;
+use App\Controllers\Auth\AuthController;
+use App\Controllers\Auth\PasswordResetController;
+use App\Controllers\LocationController;
+use App\Controllers\PaiementController;
+use App\Controllers\UserController;
+use App\Controllers\VoitureController;
 use Illuminate\Support\Facades\Route;
 
 /*
