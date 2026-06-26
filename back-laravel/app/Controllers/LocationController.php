@@ -2,7 +2,6 @@
 
 namespace App\Controllers;
 
-use App\Http\Requests\LocationRequest;
 use App\Models\Location;
 use App\Models\Paiement;
 use App\Models\Voiture;
@@ -53,8 +52,20 @@ class LocationController extends Controller
      * Crée une réservation, génère le paiement associé et bloque la voiture.
      * POST /api/locations
      */
-    public function store(LocationRequest $request): JsonResponse
+    public function store(Request $request): JsonResponse
     {
+        $request->validate([
+            'voiture_id'           => 'required|exists:voitures,id',
+            'date_debut'           => 'required|date|after_or_equal:today',
+            'date_fin'             => 'required|date|after:date_debut',
+            'lieu_prise_en_charge' => 'required|string|max:255',
+            'lieu_retour'          => 'required|string|max:255',
+        ], [
+            'voiture_id.exists'         => 'La voiture sélectionnée n\'existe pas.',
+            'date_debut.after_or_equal' => 'La date de début doit être aujourd\'hui ou dans le futur.',
+            'date_fin.after'            => 'La date de fin doit être après la date de début.',
+        ]);
+
         $voiture = Voiture::findOrFail($request->voiture_id);
 
         if (!$voiture->disponible) {

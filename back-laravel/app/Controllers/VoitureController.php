@@ -2,7 +2,6 @@
 
 namespace App\Controllers;
 
-use App\Http\Requests\VoitureRequest;
 use App\Models\Voiture;
 use App\Views\VoitureView;
 use Illuminate\Http\JsonResponse;
@@ -50,9 +49,20 @@ class VoitureController extends Controller
      * Crée une voiture.
      * POST /api/voitures  (admin)
      */
-    public function store(VoitureRequest $request): JsonResponse
+    public function store(Request $request): JsonResponse
     {
-        $voiture = Voiture::create($request->validated());
+        $validated = $request->validate([
+            'marque'          => 'required|string|max:100',
+            'modele'          => 'required|string|max:100',
+            'annee'           => 'required|integer|min:1990|max:' . (date('Y') + 1),
+            'immatriculation' => 'required|string|unique:voitures,immatriculation',
+            'couleur'         => 'required|string|max:50',
+            'prix_par_jour'   => 'required|numeric|min:0',
+            'disponible'      => 'boolean',
+            'kilometrage'     => 'integer|min:0',
+        ]);
+
+        $voiture = Voiture::create($validated);
 
         return response()->json([
             'message' => 'Voiture ajoutée avec succès.',
@@ -64,9 +74,20 @@ class VoitureController extends Controller
      * Met à jour une voiture.
      * PUT /api/voitures/{id}  (admin)
      */
-    public function update(VoitureRequest $request, Voiture $voiture): JsonResponse
+    public function update(Request $request, Voiture $voiture): JsonResponse
     {
-        $voiture->update($request->validated());
+        $validated = $request->validate([
+            'marque'          => 'required|string|max:100',
+            'modele'          => 'required|string|max:100',
+            'annee'           => 'required|integer|min:1990|max:' . (date('Y') + 1),
+            'immatriculation' => 'required|string|unique:voitures,immatriculation,' . $voiture->id,
+            'couleur'         => 'required|string|max:50',
+            'prix_par_jour'   => 'required|numeric|min:0',
+            'disponible'      => 'boolean',
+            'kilometrage'     => 'integer|min:0',
+        ]);
+
+        $voiture->update($validated);
 
         return response()->json([
             'message' => 'Voiture mise à jour avec succès.',

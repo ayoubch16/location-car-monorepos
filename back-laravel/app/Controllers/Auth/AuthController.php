@@ -3,8 +3,6 @@
 namespace App\Controllers\Auth;
 
 use App\Controllers\Controller;
-use App\Http\Requests\Auth\LoginRequest;
-use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Traits\GeneratesTokens;
 use App\Models\RefreshToken;
 use App\Models\User;
@@ -22,8 +20,23 @@ class AuthController extends Controller
      * Inscription d'un nouveau client.
      * POST /api/auth/register
      */
-    public function register(RegisterRequest $request): JsonResponse
+    public function register(Request $request): JsonResponse
     {
+        $request->validate([
+            'nom'            => 'required|string|max:100',
+            'prenom'         => 'required|string|max:100',
+            'email'          => 'required|email|unique:users,email',
+            'password'       => 'required|string|min:8|confirmed',
+            'telephone'      => 'nullable|string|max:20',
+            'adresse'        => 'nullable|string|max:255',
+            'num_permis'     => 'nullable|string|max:50',
+            'date_naissance' => 'nullable|date|before:-18 years',
+        ], [
+            'email.unique'          => 'Cet email est déjà utilisé.',
+            'password.confirmed'    => 'Les mots de passe ne correspondent pas.',
+            'date_naissance.before' => 'Vous devez avoir au moins 18 ans.',
+        ]);
+
         $user = User::create([
             'nom'            => $request->nom,
             'prenom'         => $request->prenom,
@@ -47,8 +60,12 @@ class AuthController extends Controller
      * Connexion d'un utilisateur existant.
      * POST /api/auth/login
      */
-    public function login(LoginRequest $request): JsonResponse
+    public function login(Request $request): JsonResponse
     {
+        $request->validate([
+            'email'    => 'required|email',
+            'password' => 'required|string',
+        ]);
         if (!Auth::attempt($request->only('email', 'password'))) {
             return response()->json([
                 'message' => 'Email ou mot de passe incorrect.',

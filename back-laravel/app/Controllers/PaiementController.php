@@ -2,7 +2,6 @@
 
 namespace App\Controllers;
 
-use App\Http\Requests\PaiementRequest;
 use App\Models\Paiement;
 use App\Views\PaiementView;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -52,8 +51,11 @@ class PaiementController extends Controller
      * Le client paie sa réservation. Active la location.
      * POST /api/paiements/{id}/pay
      */
-    public function pay(PaiementRequest $request, Paiement $paiement): JsonResponse
+    public function pay(Request $request, Paiement $paiement): JsonResponse
     {
+        $request->validate([
+            'methode' => 'required|in:carte_bancaire,especes,virement',
+        ]);
         $user = $request->user();
 
         if ($paiement->location->user_id !== $user->id) {
@@ -118,8 +120,11 @@ class PaiementController extends Controller
      * Admin confirme le paiement (espèces/virement). Passe la location en "confirmee".
      * POST /api/paiements/{id}/admin-pay
      */
-    public function adminPay(PaiementRequest $request, Paiement $paiement): JsonResponse
+    public function adminPay(Request $request, Paiement $paiement): JsonResponse
     {
+        $request->validate([
+            'methode' => 'required|in:carte_bancaire,especes,virement',
+        ]);
         if ($paiement->statut !== 'en_attente') {
             return response()->json(['message' => 'Ce paiement ne peut plus être modifié.'], 409);
         }
