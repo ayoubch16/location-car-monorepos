@@ -2,13 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Location extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
         'user_id', 'voiture_id', 'date_debut', 'date_fin',
         'duree_jours', 'lieu_prise_en_charge', 'lieu_retour',
